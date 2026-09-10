@@ -1,0 +1,30 @@
+name: Test install with caching enabled
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        with:
+          token: ${{ github.token }}
+          cache: "true"
+          config: |
+            mikefarah/yq:
+              tag: v4.40.5
+              rename-to: yq
+              chmod: "0755"
+
+      - name: Assert yq binary is installed with cache enabled
+        run: |
+          echo "Checking for yq binary (installed with cache=true)..."
+          if ! command -v yq >/dev/null 2>&1; then
+            echo "FAIL: yq binary not found in PATH"
+            exit 1
+          fi
+          YQ_VERSION=$(yq --version 2>&1 | head -1)
+          echo "yq version: $YQ_VERSION"
+          echo "PASS: yq binary is installed with caching enabled"

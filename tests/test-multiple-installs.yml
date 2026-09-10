@@ -1,0 +1,44 @@
+name: Test installing multiple binaries from GitHub releases
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        with:
+          token: ${{ github.token }}
+          config: |
+            mikefarah/yq:
+              tag: v4.40.5
+              rename-to: yq
+              chmod: "0755"
+            jqlang/jq:
+              tag: jq-1.7.1
+              rename-to: jq
+              chmod: "0755"
+
+      - name: Assert yq binary is installed
+        run: |
+          echo "Checking for yq binary..."
+          if ! command -v yq >/dev/null 2>&1; then
+            echo "FAIL: yq binary not found in PATH"
+            exit 1
+          fi
+          YQ_VERSION=$(yq --version 2>&1 | head -1)
+          echo "yq version: $YQ_VERSION"
+          echo "PASS: yq binary is installed"
+
+      - name: Assert jq binary is installed
+        run: |
+          echo "Checking for jq binary..."
+          if ! command -v jq >/dev/null 2>&1; then
+            echo "FAIL: jq binary not found in PATH"
+            exit 1
+          fi
+          JQ_VERSION=$(jq --version 2>&1 | head -1)
+          echo "jq version: $JQ_VERSION"
+          echo "PASS: jq binary is installed"

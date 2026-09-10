@@ -1,0 +1,29 @@
+name: Test install with rename-to option
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        with:
+          token: ${{ github.token }}
+          config: |
+            mikefarah/yq:
+              tag: v4.40.5
+              rename-to: my-yq
+              chmod: "0755"
+
+      - name: Assert renamed binary is installed and on PATH
+        run: |
+          echo "Checking for my-yq binary..."
+          if ! command -v my-yq >/dev/null 2>&1; then
+            echo "FAIL: my-yq binary not found in PATH"
+            exit 1
+          fi
+          MY_YQ_VERSION=$(my-yq --version 2>&1 | head -1)
+          echo "my-yq version: $MY_YQ_VERSION"
+          echo "PASS: renamed binary my-yq is installed and executable"

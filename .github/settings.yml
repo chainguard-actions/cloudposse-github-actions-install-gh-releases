@@ -1,0 +1,8 @@
+# These settings are synced to GitHub by https://probot.github.io/apps/settings/
+_extends: .github
+
+repository:
+  name: install-gh-releases
+  description: Install executable binaries from Github Releases
+  homepage: https://cloudposse.com/accelerate
+  topics: "github-action"
