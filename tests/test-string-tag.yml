@@ -1,0 +1,51 @@
+name: Test install using string tag format
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      RUNNER_TOOL_CACHE: /tmp/runner-tool-cache
+      RUNNER_TEMP: /tmp/runner-temp
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create required directories
+        run: |
+          mkdir -p /tmp/runner-tool-cache
+          mkdir -p /tmp/runner-temp
+
+      - name: Install tool using string tag shorthand format
+        id: action
+        uses: .
+        with:
+          config: |
+            mikefarah/yq: v4.44.3
+
+      - name: Assert tool cache directory was populated
+        run: |
+          echo "Checking tool cache directory for yq v4.44.3..."
+          # The tool cache path uses os.arch() which is 'x64' on amd64 machines
+          # but the action may also use 'amd64' depending on the arch detection
+          FOUND=false
+          for arch in x64 amd64 x86_64; do
+            CACHE_DIR="/tmp/runner-tool-cache/mikefarah/yq/v4.44.3/linux-${arch}"
+            echo "Checking: $CACHE_DIR"
+            if [ -d "$CACHE_DIR" ]; then
+              echo "Found cache dir: $CACHE_DIR"
+              ls -la "$CACHE_DIR"
+              FILE_COUNT=$(find "$CACHE_DIR" -type f | wc -l)
+              echo "File count: $FILE_COUNT"
+              if [ "$FILE_COUNT" -gt 0 ]; then
+                FOUND=true
+                break
+              fi
+            fi
+          done
+          if [ "$FOUND" = "false" ]; then
+            echo "Tool cache contents:"
+            find /tmp/runner-tool-cache -type f 2>/dev/null || true
+            echo "FAIL: no files found in tool cache for mikefarah/yq v4.44.3"
+            exit 1
+          fi
+          echo "PASS: yq installed via string tag format, files found in tool cache"

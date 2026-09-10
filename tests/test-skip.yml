@@ -1,0 +1,47 @@
+name: Test skip flag skips installation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      RUNNER_TOOL_CACHE: /tmp/runner-tool-cache
+      RUNNER_TEMP: /tmp/runner-temp
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create required directories
+        run: |
+          mkdir -p /tmp/runner-tool-cache
+          mkdir -p /tmp/runner-temp
+
+      - name: Run action with skip flag set to true
+        id: action
+        uses: .
+        with:
+          config: |
+            mikefarah/yq:
+              tag: v4.44.3
+              skip: true
+
+      - name: Assert action succeeded (skip is not an error)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "success" ]; then
+            echo "FAIL: expected action to succeed when skip=true, got '$OUTCOME'"
+            exit 1
+          fi
+          echo "PASS: action succeeded with skip=true"
+
+      - name: Assert yq was NOT installed in tool cache (skipped)
+        run: |
+          echo "Checking tool cache was NOT populated (should have been skipped)..."
+          CACHE_DIR="/tmp/runner-tool-cache/mikefarah/yq"
+          if [ -d "$CACHE_DIR" ]; then
+            echo "FAIL: tool cache directory was created but should have been skipped"
+            ls -la "$CACHE_DIR"
+            exit 1
+          fi
+          echo "PASS: tool cache directory was not created (correctly skipped)"

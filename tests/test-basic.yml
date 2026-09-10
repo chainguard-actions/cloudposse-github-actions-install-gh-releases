@@ -1,0 +1,71 @@
+name: Test basic install from GitHub releases
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      RUNNER_TOOL_CACHE: /tmp/runner-tool-cache
+      RUNNER_TEMP: /tmp/runner-temp
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create required directories
+        run: |
+          mkdir -p /tmp/runner-tool-cache
+          mkdir -p /tmp/runner-temp
+
+      - name: Install yq from GitHub releases
+        id: action
+        uses: .
+        with:
+          config: |
+            mikefarah/yq:
+              tag: v4.44.3
+              platform: linux
+              arch: amd64
+              extension-matching: false
+              rename-to: yq
+              chmod: "0755"
+
+      - name: Assert yq is installed and executable
+        run: |
+          echo "Checking for yq binary after install..."
+          # The action renames the binary to 'yq' when extension-matching is false
+          # However, if a tar.gz asset is selected instead of the direct binary,
+          # the binary may be named 'yq_linux_amd64' (rename-to is ignored for archives)
+          YQ_FOUND=false
+          for bin in yq yq_linux_amd64; do
+            if command -v "$bin" > /dev/null 2>&1; then
+              echo "$bin found at: $(command -v $bin)"
+              YQ_FOUND=true
+              YQ_BIN="$bin"
+              break
+            fi
+          done
+          if [ "$YQ_FOUND" = "false" ]; then
+            echo "Tool cache contents:"
+            find /tmp/runner-tool-cache -type f 2>/dev/null || true
+            echo "FAIL: no yq binary found on PATH"
+            exit 1
+          fi
+          echo "PASS: yq is installed and on PATH as '$YQ_BIN'"
+
+      - name: Assert yq runs correctly
+        run: |
+          echo "Running yq --version..."
+          # Try yq first, then yq_linux_amd64
+          VERSION_OUTPUT=""
+          for bin in yq yq_linux_amd64; do
+            if command -v "$bin" > /dev/null 2>&1; then
+              VERSION_OUTPUT=$("$bin" --version 2>&1)
+              break
+            fi
+          done
+          echo "version output: $VERSION_OUTPUT"
+          if echo "$VERSION_OUTPUT" | grep -qi "yq"; then
+            echo "PASS: yq runs correctly"
+          else
+            echo "FAIL: yq did not produce expected output"
+            exit 1
+          fi

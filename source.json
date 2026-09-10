@@ -1,0 +1,11 @@
+{
+  "owner": "cloudposse-github-actions",
+  "repo": "install-gh-releases",
+  "version": "v1",
+  "commit_sha": "33b15dbedceb0a3425d72f54a2300202d5c3418d",
+  "url": "https://github.com/cloudposse-github-actions/install-gh-releases",
+  "policy_sha": "d636be7e43ef829af6e853da6b3c7566db9f72fe",
+  "test_policy_sha": "843adf9e4b8f85d0c08b27b9d0b09dd094b54702",
+  "test_agent_version": "2",
+  "harden_agent_version": "2"
+}

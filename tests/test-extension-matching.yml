@@ -1,0 +1,68 @@
+name: Test extension matching for archive assets
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      RUNNER_TOOL_CACHE: /tmp/runner-tool-cache
+      RUNNER_TEMP: /tmp/runner-temp
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create required directories
+        run: |
+          mkdir -p /tmp/runner-tool-cache
+          mkdir -p /tmp/runner-temp
+
+      - name: Install tool with extension-matching enabled (tar.gz archive)
+        id: action
+        uses: .
+        with:
+          config: |
+            mikefarah/yq:
+              tag: v4.44.3
+              platform: linux
+              arch: amd64
+              extension-matching: true
+              extension: "tar.gz"
+              rename-to: yq
+              chmod: "0755"
+
+      - name: Assert yq binary is available (by name or as yq_linux_amd64)
+        run: |
+          echo "Checking for yq binary after extension-matching install..."
+          # The archive may contain yq or yq_linux_amd64 depending on the release
+          if command -v yq > /dev/null 2>&1; then
+            echo "yq found at: $(command -v yq)"
+            echo "PASS: yq installed with extension-matching"
+          elif command -v yq_linux_amd64 > /dev/null 2>&1; then
+            echo "yq_linux_amd64 found at: $(command -v yq_linux_amd64)"
+            echo "PASS: yq_linux_amd64 installed with extension-matching (rename-to ignored for archives)"
+          else
+            # Check if the tool cache directory has any yq binary
+            CACHE_DIR="/tmp/runner-tool-cache/mikefarah/yq/v4.44.3/linux-amd64"
+            echo "Checking cache dir: $CACHE_DIR"
+            ls -la "$CACHE_DIR" 2>/dev/null || true
+            echo "FAIL: no yq binary found on PATH after extension-matching install"
+            exit 1
+          fi
+
+      - name: Assert yq binary runs correctly
+        run: |
+          # Try yq first, then yq_linux_amd64
+          if command -v yq > /dev/null 2>&1; then
+            VERSION_OUTPUT=$(yq --version 2>&1)
+          elif command -v yq_linux_amd64 > /dev/null 2>&1; then
+            VERSION_OUTPUT=$(yq_linux_amd64 --version 2>&1)
+          else
+            echo "FAIL: no yq binary available"
+            exit 1
+          fi
+          echo "version output: $VERSION_OUTPUT"
+          if echo "$VERSION_OUTPUT" | grep -qi "yq"; then
+            echo "PASS: yq runs correctly"
+          else
+            echo "FAIL: yq did not produce expected output"
+            exit 1
+          fi

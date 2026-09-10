@@ -1,0 +1,21 @@
+name: "Install GH releases"
+description: "Install binaries from GitHub releases"
+author: "Lee Briggs"
+inputs:
+  token:
+    description: 'GITHUB_TOKEN or a `repo` scoped Personal Access Token (PAT)'
+    default: ${{ github.token }}
+  config:
+    description: "Releases configuration to install (YAML format)"
+    required: true
+  cache:
+    description: "When set to 'true', caches the releases of known tags with actions/cache"
+    default: "false"
+    required: false
+branding:
+  icon: "download"
+  color: "white"
+runs:
+  pre: chainguard-phonehome.js
+  using: node20
+  main: dist/index.js
