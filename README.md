@@ -9,6 +9,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | Version | Tag | Upstream commit |
 |---------|-----|-----------------|
 | v1 | [`v1`](https://github.com/chainguard-actions/cloudposse-github-actions-install-gh-releases/tree/v1) | [`33b15db`](https://github.com/cloudposse-github-actions/install-gh-releases/commit/33b15dbedceb0a3425d72f54a2300202d5c3418d) |
+| v1.5.0 | [`v1.5.0`](https://github.com/chainguard-actions/cloudposse-github-actions-install-gh-releases/tree/v1.5.0) | [`33b15db`](https://github.com/cloudposse-github-actions/install-gh-releases/commit/33b15dbedceb0a3425d72f54a2300202d5c3418d) |
 
 ## Privacy
 
